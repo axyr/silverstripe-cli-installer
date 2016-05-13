@@ -1,0 +1,28 @@
+{
+  "name": "axyr/silverstripe-cli-installer",
+  "description": "Silverstripe framework installer.",
+  "keywords": [
+    "silverstripe",
+    "installer",
+    "cli"
+  ],
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Martijn van Nieuwenhoven",
+      "email": "info@axyrmedia.nl"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Axyr\\Silverstripe\\Installer\\Console\\": "src/"
+    }
+  },
+  "require": {
+    "symfony/console": "~2.3|~3.0",
+    "symfony/process": "~2.3|~3.0"
+  },
+  "bin": [
+    "silverstripe"
+  ]
+}
