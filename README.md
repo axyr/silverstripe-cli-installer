@@ -9,7 +9,7 @@ $ composer global require "axyr/silverstripe-cli-installer"
 ## Usage
 
 ```
-$silverstripe new projectname
+$ silverstripe new projectname
 ```
 This will create a Silverstripe Installer project in the directory projectname.
 
