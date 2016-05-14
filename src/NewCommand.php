@@ -123,8 +123,8 @@ class NewCommand extends Command
 
         $this->runCommands($composer . ' create-project silverstripe/installer ' . $this->directory);
 
-        $this->writer->writeEnvironmentFile();
-        $this->writer->writeConfigFile();
+        $this->writer->writeEnvironmentFile($this->config);
+        $this->writer->writeConfigFile($this->config);
 
         $this->runCommands([
             'cd ' . $this->directory,
@@ -136,8 +136,6 @@ class NewCommand extends Command
         $this->writer->writeTestFiles();
 
         $this->comment('Project ready!');
-
-
     }
 
     protected function runCommands($commands, $quiet = false)
@@ -218,12 +216,13 @@ class NewCommand extends Command
             $config = [$section => $config];
         }
 
-        foreach ($config as $name => $value) {
+        foreach ($config as $key => $value) {
+            $name = $key;
             if($section != $name) {
                 $name = $section . ' ' . $name;
             }
             $question    = new Question($this->formatConfigurationQuestion($name, $value), $value);
-            $this->config[$section][$name] = $helper->ask($this->input, $this->output, $question);
+            $this->config[$section][$key] = $helper->ask($this->input, $this->output, $question);
         }
     }
 

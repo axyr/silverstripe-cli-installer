@@ -9,20 +9,18 @@ use Axyr\Silverstripe\Installer\Console\NewCommand;
 class FileWriter
 {
     private $directory;
-    private $config;
     private $command;
 
-    public function __construct(NewCommand $command, $directory, $config)
+    public function __construct(NewCommand $command, $directory)
     {
         $this->command   = $command;
         $this->directory = $directory;
-        $this->config    = $config;
     }
 
     /**
      * Write config to _ss_environment.php file in webroot.
      */
-    public function writeEnvironmentFile()
+    public function writeEnvironmentFile($config)
     {
         $file = $this->directory . '/_ss_environment.php';
 
@@ -34,13 +32,13 @@ class FileWriter
         $this->command->info('create ' . $file);
         touch($file);
 
-        $host  = $this->config['host'];
-        $db    = $this->config['database'];
-        $admin = $this->config['admin'];
+        $host  = $config['hostname'];
+        $db    = $config['database'];
+        $admin = $config['admin'];
 
         $content  = "<?php\n\n";
         $content .= "global \$_FILE_TO_URL_MAPPING;\n";
-        $content .= "\$_FILE_TO_URL_MAPPING[__DIR__] = '".$host['hostname']['hostname']."';\n\n";
+        $content .= "\$_FILE_TO_URL_MAPPING[__DIR__] = '".$host['hostname']."';\n\n";
         $content .= "define('SS_ENVIRONMENT_TYPE', 'dev');\n\n";
         $content .= "define('SS_DATABASE_CLASS', '".$db['class']."');\n";
         $content .= "define('SS_DATABASE_SERVER', '".$db['server']."');\n";
@@ -56,7 +54,7 @@ class FileWriter
     /**
      * Write config to _config.php file in webroot/mysite.
      */
-    public function writeConfigFile()
+    public function writeConfigFile($config)
     {
         $mysite = $this->directory . '/mysite';
         $file   = $mysite . '/_config.php';
@@ -75,14 +73,14 @@ class FileWriter
         $content .= "global \$project;\n";
         $content .= "\$project = 'mysite';\n\n";
         $content .= "global \$database;\n";
-        $content .= "\$database = '{$this->config['database']['database']}';\n\n";
+        $content .= "\$database = '{$config['database']['database']}';\n\n";
         $content .= "require_once('conf/ConfigureFromEnv.php');\n\n";
         $content .= "// Set the site locale\n";
-        $content .= "i18n::set_locale('{$this->config['locale']['locale']}');\n";
+        $content .= "i18n::set_locale('{$config['locale']['locale']}');\n";
 
-        if(!ini_get('date.timezone') && $this->config['timezone']['timezone']) {
-            $content .= "date_default_timezone_set('{$this->config['timezone']['timezone']}');\n";
-        }
+        //if(!ini_get('date.timezone') && $config['timezone']['timezone']) {
+            $content .= "date_default_timezone_set('{$config['timezone']['timezone']}');\n";
+        //}
 
         file_put_contents($file, $content);
     }
