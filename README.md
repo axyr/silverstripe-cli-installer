@@ -10,7 +10,7 @@ $ sudo mv composer.phar /usr/local/bin/composer
 ```
 ### Install the installer
 ```
-$ composer global require axyr/silverstripe-cli-installer dev-master
+$ composer global require axyr/silverstripe-cli-installer 0.0.1
 ```
 Make sure that ~/.composer/vendor/bin directory is in your PATH, so you can use the silverstripe command.
 
