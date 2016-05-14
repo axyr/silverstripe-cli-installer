@@ -136,6 +136,8 @@ class NewCommand extends Command
         $this->writer->writeTestFiles();
 
         $this->comment('Project ready!');
+        $this->comment('Test your website by entering : cd test && vendor/bin/phpunit mysite');
+        $this->comment('and vistit your website on ' . $this->config['hostname']['hostname']);
     }
 
     protected function runCommands($commands, $quiet = false)

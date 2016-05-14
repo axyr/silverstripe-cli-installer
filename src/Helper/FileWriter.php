@@ -94,7 +94,7 @@ class FileWriter
         $file   = $tests . '/SampleTest.php';
 
         if(!is_dir($tests)) {
-            $this->command->line('create ' . $tests);
+            $this->command->info('create ' . $tests);
             mkdir($tests);
         }
 
