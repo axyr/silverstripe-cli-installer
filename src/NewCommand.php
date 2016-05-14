@@ -137,7 +137,7 @@ class NewCommand extends Command
 
         $this->comment('Project ready!');
         $this->comment('Test your website by entering : cd '.$input->getArgument('name').' && vendor/bin/phpunit mysite');
-        $this->comment('and vistit your website on ' . $this->config['hostname']['hostname']);
+        $this->comment('and visit your website on ' . $this->config['hostname']['hostname']);
     }
 
     protected function runCommands($commands, $quiet = false)
