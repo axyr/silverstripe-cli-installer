@@ -13,9 +13,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Axyr\Silverstripe\Installer\Console\Helper\FileWriter;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Axyr\Silverstripe\Installer\Console\Helper\EnvironmentChecker;
-use Axyr\Silverstripe\Installer\Console\Helper\FileWriter;
 
 class NewCommand extends Command
 {
@@ -107,20 +107,18 @@ class NewCommand extends Command
         $this->checker = new EnvironmentChecker($this->directory);
         $this->writer  = new FileWriter($this, $this->directory, $this->config);
 
-        $this->configureDatabase();
-        $this->configureAdmin();
-        $this->configureHostName();
-        $this->configureLocale();
-        $this->configureTimezone();
+        $this->configureDatabase()
+             ->configureAdmin()
+             ->configureHostName()
+             ->configureLocale()
+             ->configureTimeZone();
 
         if (!$this->confirmConfiguration()) {
             return;
         }
 
         $this->info('Installing project...');
-
         $composer = $this->findComposer();
-
         $this->runCommands($composer . ' create-project silverstripe/installer ' . $this->directory);
 
         $this->writer->writeEnvironmentFile($this->config);
@@ -131,8 +129,7 @@ class NewCommand extends Command
             'php framework/cli-script.php dev/build'
         ], true); // suppress database build messages
 
-        $this->removeInstallationField();
-
+        $this->removeInstallationFiles();
         $this->writer->writeTestFiles();
 
         $this->comment('Project ready!');
@@ -203,7 +200,7 @@ class NewCommand extends Command
         $this->configureSection('locale', $this->checker->getLocale());
     }
 
-    protected function configureTimezone()
+    protected function configureTimeZone()
     {
         if(!ini_get('date.timezone')) {
             $this->configureSection('timezone', trim($this->checker->getTimeZone()));
@@ -245,7 +242,7 @@ class NewCommand extends Command
             ->ask($this->input, $this->output, new ConfirmationQuestion('Are these settings correct?'));
     }
 
-    protected function removeInstallationField()
+    protected function removeInstallationFiles()
     {
         $installfiles = array(
             'install.php',
