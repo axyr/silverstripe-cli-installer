@@ -165,7 +165,7 @@ class NewCommand extends Command
             $config = ['database' => $this->checker->getDatabaseName()];
         }
 
-        $this->configureSection('database', $config);
+        return $this->configureSection('database', $config);
     }
 
     protected function configureHostName()
@@ -176,7 +176,7 @@ class NewCommand extends Command
             $config = $this->checker->getHostName();
         }
 
-        $this->configureSection('hostname', $config);
+        return $this->configureSection('hostname', $config);
     }
 
     protected function configureAdmin()
@@ -192,19 +192,20 @@ class NewCommand extends Command
             }
         }
 
-        $this->configureSection('admin', $config);
+        return $this->configureSection('admin', $config);
     }
 
     protected function configureLocale()
     {
-        $this->configureSection('locale', $this->checker->getLocale());
+        return $this->configureSection('locale', $this->checker->getLocale());
     }
 
     protected function configureTimeZone()
     {
         if(!ini_get('date.timezone')) {
-            $this->configureSection('timezone', trim($this->checker->getTimeZone()));
+            return $this->configureSection('timezone', trim($this->checker->getTimeZone()));
         }
+        return $this;
     }
 
     protected function configureSection($section, $config)
@@ -223,6 +224,8 @@ class NewCommand extends Command
             $question    = new Question($this->formatConfigurationQuestion($name, $value), $value);
             $this->config[$section][$key] = $helper->ask($this->input, $this->output, $question);
         }
+
+        return $this;
     }
 
     protected function confirmConfiguration()
@@ -248,16 +251,15 @@ class NewCommand extends Command
             'install.php',
             'install-frameworkmissing.html'
         );
+
         foreach($installfiles as $installfile) {
             if(file_exists($this->directory . '/' . $installfile)) {
                 @unlink($this->directory . '/' . $installfile);
             }
 
-            if(file_exists($this->directory . '/' . $installfile)) {
-                $this->warning('Could not delete file : ' . $installfile);
-            }else{
-                $this->info('Deleted installation file : ' . $installfile);
-            }
+            (file_exists($this->directory . '/' . $installfile))
+                ? $this->warning('Could not delete file : ' . $installfile)
+                : $this->info('Deleted installation file : ' . $installfile);
         }
     }
 
