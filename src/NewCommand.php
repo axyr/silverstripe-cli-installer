@@ -6,10 +6,10 @@ use Controller;
 use DatabaseAdmin;
 use RuntimeException;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -65,14 +65,9 @@ class NewCommand extends Command
     private $writer;
 
     /**
-     * @var \Symfony\Component\Console\Input\InputInterface
+     * @var \Symfony\Component\Console\Style\SymfonyStyle
      */
-    private $input;
-
-    /**
-     * @var \Symfony\Component\Console\Input\OutputInterface
-     */
-    private $output;
+    private $io;
 
     /**
      * Configure the command options.
@@ -97,15 +92,14 @@ class NewCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->input  = $input;
-        $this->output = $output;
+        $this->io     = new SymfonyStyle($input, $output);
 
         $this->verifyApplicationDoesntExist(
             $this->directory = ($input->getArgument('name')) ? getcwd() . '/' . $input->getArgument('name') : getcwd()
         );
 
         $this->checker = new EnvironmentChecker($this->directory);
-        $this->writer  = new FileWriter($this, $this->directory, $this->config);
+        $this->writer  = new FileWriter($this->io, $this->directory);
 
         $this->configureDatabase()
              ->configureAdmin()
@@ -117,9 +111,12 @@ class NewCommand extends Command
             return;
         }
 
-        $this->info('Installing project...');
+        $this->io->title('Installing project...');
         $composer = $this->findComposer();
-        $this->runCommands($composer . ' create-project silverstripe/installer ' . $this->directory);
+        $this->runCommands($composer . ' create-project silverstripe/installer ' . $this->directory, $output);
+
+        $this->io->newLine();
+        $this->io->title('Writing configuration');
 
         $this->writer->writeEnvironmentFile($this->config);
         $this->writer->writeConfigFile($this->config);
@@ -127,17 +124,22 @@ class NewCommand extends Command
         $this->runCommands([
             'cd ' . $this->directory,
             'php framework/cli-script.php dev/build'
-        ], true); // suppress database build messages
+        ],
+            $output,
+            true); // suppress database build messages
 
+        $this->io->title('Writing configuration');
         $this->removeInstallationFiles();
         $this->writer->writeTestFiles();
 
-        $this->comment('Project ready!');
-        $this->comment('Test your website by entering : cd '.$input->getArgument('name').' && vendor/bin/phpunit mysite');
-        $this->comment('and visit your website on ' . $this->config['hostname']['hostname']);
+        $this->io->success([
+            'Project ready!',
+            'Test your website by entering : cd '.$input->getArgument('name').' && vendor/bin/phpunit mysite',
+            'and visit your website on ' . $this->config['hostname']['hostname']
+        ]);
     }
 
-    protected function runCommands($commands, $quiet = false)
+    protected function runCommands($commands, $output, $quiet = false)
     {
         $commands = (array)$commands;
         $process = new Process(implode(' && ', $commands), $this->directory, null, null, null);
@@ -146,7 +148,6 @@ class NewCommand extends Command
            $process->setTty(true);
         }
 
-        $output = $this->output;
         $process->run(function ($type, $line) use ($output, $quiet) {
             if($quiet === false) {
                $output->write($line);
@@ -210,19 +211,13 @@ class NewCommand extends Command
 
     protected function configureSection($section, $config)
     {
-        $helper = $this->getHelper('question');
-
         if(!is_array($config)) {
             $config = [$section => $config];
         }
 
         foreach ($config as $key => $value) {
-            $name = $key;
-            if($section != $name) {
-                $name = $section . ' ' . $name;
-            }
-            $question    = new Question($this->formatConfigurationQuestion($name, $value), $value);
-            $this->config[$section][$key] = $helper->ask($this->input, $this->output, $question);
+            $name = ($section != $key) ? $section . ' ' . $key : $key;
+            $this->config[$section][$key] = $this->io->askQuestion(new Question(ucfirst($name), $value));
         }
 
         return $this;
@@ -230,19 +225,14 @@ class NewCommand extends Command
 
     protected function confirmConfiguration()
     {
-        $table = new Table($this->output);
-        $table->setHeaders(['Name', 'Value']);
+        $rows = [];
         foreach ($this->config as $section => $values) {
-            $table->addRow([ '', '']);
             foreach ($values as $name => $value) {
-                $table->addRow([$name, $value]);
+                $rows[] = [$name, $value];
             }
         }
-        $table->render();
-
-        return $this
-            ->getHelper('question')
-            ->ask($this->input, $this->output, new ConfirmationQuestion('Are these settings correct?'));
+        $this->io->table(['Name', 'Value'], $rows);
+        return $this->io->askQuestion(new ConfirmationQuestion('Are these settings correct?'));
     }
 
     protected function removeInstallationFiles()
@@ -258,8 +248,8 @@ class NewCommand extends Command
             }
 
             (file_exists($this->directory . '/' . $installfile))
-                ? $this->warning('Could not delete file : ' . $installfile)
-                : $this->info('Deleted installation file : ' . $installfile);
+                ? $this->io->warning('Could not delete file : ' . $installfile)
+                : $this->io->text('Deleted installation file : ' . $installfile);
         }
     }
 
@@ -288,41 +278,5 @@ class NewCommand extends Command
         }
 
         return 'composer';
-    }
-
-    /**
-     * @param $question
-     * @param string $default
-     * @return string
-     */
-    protected function formatConfigurationQuestion($question, $default = ' ')
-    {
-        $question = ucfirst($question);
-        return "<info>$question </info><comment>[$default]</comment><info>:</info> ";
-    }
-
-    public function info($message)
-    {
-        $this->line($message, 'info');
-    }
-
-    public function comment($message)
-    {
-        $this->line($message, 'comment');
-    }
-
-    public function error($message)
-    {
-        $this->line($message, 'error');
-    }
-
-    public function question($message)
-    {
-        $this->line($message, 'question');
-    }
-
-    public function line($message, $type = null)
-    {
-        $this->output->writeln($type ? "<$type>$message</$type>" : $message);
     }
 }

@@ -3,17 +3,16 @@
 
 namespace Axyr\Silverstripe\Installer\Console\Helper;
 
-
-use Axyr\Silverstripe\Installer\Console\NewCommand;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class FileWriter
 {
     private $directory;
-    private $command;
+    private $io;
 
-    public function __construct(NewCommand $command, $directory)
+    public function __construct(SymfonyStyle $io, $directory)
     {
-        $this->command   = $command;
+        $this->io   = $io;
         $this->directory = $directory;
     }
 
@@ -25,11 +24,11 @@ class FileWriter
         $file = $this->directory . '/_ss_environment.php';
 
         if(!is_dir($this->directory)) {
-            $this->command->info('create ' . $this->directory);
+            $this->io->text('create ' . $this->directory);
             mkdir($this->directory);
         }
 
-        $this->command->info('create ' . $file);
+        $this->io->text('create ' . $file);
         touch($file);
 
         $host  = $config['hostname'];
@@ -47,7 +46,7 @@ class FileWriter
         $content .= "define('SS_DEFAULT_ADMIN_USERNAME', '".$admin['username']."');\n";
         $content .= "define('SS_DEFAULT_ADMIN_PASSWORD', '".$admin['password']."');\n\n";
 
-        $this->command->info('write config to _ss_environment.php');
+        $this->io->text('write config to _ss_environment.php');
         file_put_contents($file, $content);
     }
 
@@ -60,14 +59,14 @@ class FileWriter
         $file   = $mysite . '/_config.php';
 
         if(!is_dir($mysite)) {
-            $this->command->line('create ' . $mysite);
+            $this->io->text('create ' . $mysite);
             mkdir($mysite);
         }
 
-        $this->command->info('create ' . $file);
+        $this->io->text('create ' . $file);
         touch($file);
 
-        $this->command->info('writing mysite/_config.php');
+        $this->io->text('writing mysite/_config.php');
 
         $content  = "<?php\n\n";
         $content .= "global \$project;\n";
@@ -94,17 +93,17 @@ class FileWriter
         $file   = $tests . '/SampleTest.php';
 
         if(!is_dir($tests)) {
-            $this->command->info('create ' . $tests);
+            $this->io->text('create ' . $tests);
             mkdir($tests);
         }
 
-        $this->command->info('create SampleTest.php');
+        $this->io->text('create SampleTest.php');
         copy($stubDir.'/SampleTest.php', $file);
 
-        $this->command->info('create phpunit.xml');
+        $this->io->text('create phpunit.xml');
         copy($stubDir.'/phpunit.xml', $this->directory . '/mysite/phpunit.xml');
 
-        $this->command->info('create phpunit.xml.dist');
+        $this->io->text('create phpunit.xml.dist');
         copy($stubDir.'/phpunit.xml.dist', $this->directory . '/phpunit.xml.dist');
     }
 }
