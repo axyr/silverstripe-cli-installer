@@ -23,4 +23,14 @@ $ silverstripe new projectname
 If you run this in for example /var/www/projects
 it will create a project /var/www/projects/projectname
 
-The console will take you thru the required installation steps.
+The console will take you thru the required installation steps:
+
+![questions](https://raw.github.com/axyr/silverstripe-cli-installer/master/images/questions.png)
+
+Then you can run :
+
+```
+$ cd projectname && vendor/bin/phpunit mysite
+```
+
+![questions](https://raw.github.com/axyr/silverstripe-cli-installer/master/images/finished.png)
