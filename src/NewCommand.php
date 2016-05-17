@@ -206,6 +206,9 @@ class NewCommand extends Command
         if(!ini_get('date.timezone')) {
             return $this->configureSection('timezone', trim($this->checker->getTimeZone()));
         }
+
+        unset($this->config['timezone']);
+
         return $this;
     }
 

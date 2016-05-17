@@ -77,9 +77,9 @@ class FileWriter
         $content .= "// Set the site locale\n";
         $content .= "i18n::set_locale('{$config['locale']['locale']}');\n";
 
-        //if(!ini_get('date.timezone') && $config['timezone']['timezone']) {
+        if(isset($config['timezone'])) {
             $content .= "date_default_timezone_set('{$config['timezone']['timezone']}');\n";
-        //}
+        }
 
         file_put_contents($file, $content);
     }
